@@ -1,0 +1,11 @@
+schema_version: 1
+name: windows-system-pslist
+artifact: Windows.System.Pslist
+artifact_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+parameters: {}
+timeout_seconds: 300
+max_rows: 100000
+max_upload_bytes: 1000000
+expected_tables: [Windows.System.Pslist]
+expected_upload_classes: []
+

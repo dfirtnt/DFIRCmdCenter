@@ -1,0 +1,25 @@
+name: windows-remote-access-tool
+version: 1
+enabled: false
+stateful: false
+detect:
+  events: [NEW_PROCESS]
+  op: or
+  rules:
+    - op: contains
+      path: event/COMMAND_LINE
+      value: screenconnect
+    - op: contains
+      path: event/COMMAND_LINE
+      value: quickassist
+    - op: contains
+      path: event/COMMAND_LINE
+      value: anydesk
+respond:
+  - action: report
+    name: windows-remote-access-tool
+usr_mtd:
+  category: command_and_control
+  description: Reports selected remote-access tooling for analyst review.
+  false_positives: [User-approved remote support activity]
+

@@ -1,0 +1,22 @@
+name: windows-log-clear
+version: 1
+enabled: false
+stateful: false
+detect:
+  events: [NEW_PROCESS]
+  op: and
+  rules:
+    - op: ends with
+      path: event/FILE_PATH
+      value: wevtutil.exe
+    - op: contains
+      path: event/COMMAND_LINE
+      value: " cl "
+respond:
+  - action: report
+    name: windows-log-clear
+usr_mtd:
+  category: defense_evasion
+  description: Reports command-line attempts to clear Windows event logs.
+  false_positives: [Reviewed lab reset activity]
+

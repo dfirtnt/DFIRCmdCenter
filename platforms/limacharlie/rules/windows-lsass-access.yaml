@@ -1,0 +1,17 @@
+name: windows-lsass-access
+version: 1
+enabled: false
+stateful: false
+detect:
+  events: [SENSITIVE_PROCESS_ACCESS]
+  op: is
+  path: event/TARGET/FILE_PATH
+  value: "c:\\windows\\system32\\lsass.exe"
+respond:
+  - action: report
+    name: windows-lsass-access
+usr_mtd:
+  category: credential_access
+  description: Reports sensitive access to LSASS for analyst review.
+  false_positives: [Reviewed security and diagnostic tooling]
+

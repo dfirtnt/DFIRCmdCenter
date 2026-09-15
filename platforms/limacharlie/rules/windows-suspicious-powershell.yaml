@@ -1,0 +1,22 @@
+name: windows-suspicious-powershell
+version: 1
+enabled: false
+stateful: false
+detect:
+  events: [NEW_PROCESS]
+  op: and
+  rules:
+    - op: ends with
+      path: event/FILE_PATH
+      value: powershell.exe
+    - op: contains
+      path: event/COMMAND_LINE
+      value: "-enc"
+respond:
+  - action: report
+    name: windows-suspicious-powershell
+usr_mtd:
+  category: execution
+  description: Reports encoded PowerShell command lines for analyst review.
+  false_positives: [Reviewed administrative automation]
+

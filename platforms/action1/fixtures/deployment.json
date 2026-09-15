@@ -1,0 +1,14 @@
+{
+  "organization_id": "org-fixture",
+  "automation_id": "automation-fixture",
+  "endpoint_id": "endpoint-fixture",
+  "package_id": "package-velociraptor-0772",
+  "package_version": "0.77.2",
+  "operation_status": "warning",
+  "warning_codes": ["0x800B0100"],
+  "installed": true,
+  "installed_version": "0.77.2",
+  "velociraptor_client_id": "C.fixture",
+  "velociraptor_checkin_at": "2026-09-15T18:03:00Z",
+  "identity_correlated": true
+}

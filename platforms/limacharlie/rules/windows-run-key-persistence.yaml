@@ -1,0 +1,17 @@
+name: windows-run-key-persistence
+version: 1
+enabled: false
+stateful: false
+detect:
+  events: [REGISTRY_WRITE]
+  op: contains
+  path: event/REG_KEY
+  value: "\\software\\microsoft\\windows\\currentversion\\run"
+respond:
+  - action: report
+    name: windows-run-key-persistence
+usr_mtd:
+  category: persistence
+  description: Reports writes to common Windows Run persistence keys for analyst review.
+  false_positives: [Legitimate software installation and updater activity]
+
