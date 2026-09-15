@@ -12,7 +12,7 @@ from dfircmdcenter.core.records import Platform, Proposal
 from .budget import BudgetDecision
 from .coverage import CoverageClass, CoverageDecision
 from .csv_normalization import NormalizedCsv
-from .naming import validate_index, validate_sourcetype
+from .naming import normalize_host, validate_index, validate_sourcetype
 
 
 class IngestBlockedError(RuntimeError):
@@ -26,11 +26,17 @@ def build_oneshot_argv(
     index: str,
     host: str,
     sourcetype: str,
+    allowed_input_root: Path,
 ) -> tuple[str, ...]:
     validate_index(index)
     validate_sourcetype(sourcetype)
+    exact_host = normalize_host(host)
     if not splunk_binary.is_absolute() or not normalized_path.is_absolute():
         raise ValueError("Splunk executable and one-shot path must be absolute")
+    root = allowed_input_root.resolve(strict=True)
+    source = normalized_path.resolve(strict=True)
+    if source != root and not source.is_relative_to(root):
+        raise ValueError("one-shot input is outside the governed normalized-data root")
     return (
         str(splunk_binary),
         "add",
@@ -39,7 +45,7 @@ def build_oneshot_argv(
         "-index",
         index,
         "-host",
-        host,
+        exact_host.host,
         "-sourcetype",
         sourcetype,
     )

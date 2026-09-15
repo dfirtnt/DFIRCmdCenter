@@ -237,6 +237,20 @@ class ControlStore:
                         _iso(proposal.created_at),
                     ),
                 )
+                if existing is None:
+                    self._insert_event(
+                        connection,
+                        event_id=f"evt-{proposal.proposal_id}-created",
+                        event_type="proposal.created",
+                        occurred_at=proposal.created_at,
+                        execution_id=None,
+                        proposal_digest=proposal.proposal_digest,
+                        details={
+                            "proposal_id": proposal.proposal_id,
+                            "platform": proposal.platform.value,
+                            "operation": proposal.operation,
+                        },
+                    )
                 self._commit(connection)
             except BaseException:
                 self._rollback(connection)
@@ -332,6 +346,18 @@ class ControlStore:
                         _iso(approval.expires_at),
                     ),
                 )
+                self._insert_event(
+                    connection,
+                    event_id=f"evt-{approval.approval_id}-recorded",
+                    event_type="approval.recorded",
+                    occurred_at=approval.approved_at,
+                    execution_id=None,
+                    proposal_digest=approval.proposal_digest,
+                    details={
+                        "approval_id": approval.approval_id,
+                        "chat_reference": approval.chat_reference,
+                    },
+                )
                 self._commit(connection)
             except sqlite3.IntegrityError as exc:
                 self._rollback(connection)
@@ -375,6 +401,8 @@ class ControlStore:
                     raise ApprovalDigestMismatchError("approval is for a different proposal")
                 if row["consumed_at"] is not None:
                     raise ConsumedApprovalError("approval was already consumed")
+                if now_utc < _parse_time(row["approved_at"]):
+                    raise ApprovalError("approval is not valid before approved_at")
                 if now_utc >= _parse_time(row["expires_at"]):
                     raise ExpiredApprovalError("approval has expired")
 

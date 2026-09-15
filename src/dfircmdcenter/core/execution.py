@@ -5,10 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 from .approvals import ControlStore, StoredExecution
+from .audit import ReceiptWriter, make_receipt
 from .canonical import canonical_digest
 from .records import (
     ErrorKind,
@@ -19,6 +21,7 @@ from .records import (
     VerificationStatus,
 )
 from .time import workflow_now
+from .transport import TransmissionState, TransportError
 
 Revalidate = Callable[[Proposal], Mapping[str, Any]]
 Submit = Callable[[Proposal], Mapping[str, Any]]
@@ -42,6 +45,7 @@ class WriteOutcomeUnknown(RuntimeError):
 class ExecutionResult:
     execution: StoredExecution
     verification: Verification | None
+    receipt_path: Path | None = None
 
 
 def _verification_status(status: VerificationStatus) -> ExecutionStatus:
@@ -61,9 +65,53 @@ class ExecutionEngine:
         store: ControlStore,
         *,
         clock: Callable[[], datetime] = workflow_now,
+        receipt_writer: ReceiptWriter | None = None,
     ) -> None:
         self.store = store
         self.clock = clock
+        self.receipt_writer = receipt_writer
+
+    def _result(
+        self,
+        *,
+        proposal: Proposal,
+        execution: StoredExecution,
+        verification: Verification | None,
+        details: Mapping[str, Any] | None = None,
+    ) -> ExecutionResult:
+        receipt_path: Path | None = None
+        if execution.status in {
+            ExecutionStatus.VERIFIED,
+            ExecutionStatus.FAILED,
+            ExecutionStatus.PARTIAL,
+        } and self.receipt_writer is not None:
+            final_verification = verification or Verification(
+                status=(
+                    VerificationStatus.FAILED
+                    if execution.status is ExecutionStatus.FAILED
+                    else VerificationStatus.PARTIAL
+                ),
+                checked_at=self.clock(),
+                checks=details or {"phase": "execution"},
+                summary="Execution ended before adapter verification completed.",
+            )
+            receipt = make_receipt(
+                proposal_digest=proposal.proposal_digest,
+                execution_id=execution.execution_id,
+                platform=proposal.platform,
+                operation=proposal.operation,
+                scope=proposal.scope,
+                outcome=execution.status,
+                completed_at=self.clock(),
+                verification=final_verification,
+                details={"status": execution.status, **(details or {})},
+            )
+            receipt_path = self.receipt_writer.write(receipt)
+        return ExecutionResult(
+            execution=execution,
+            verification=verification,
+            receipt_path=receipt_path,
+        )
 
     def apply(
         self,
@@ -93,10 +141,15 @@ class ExecutionEngine:
                 now=self.clock(),
                 details={"phase": "revalidation", "error": str(exc)},
             )
-            return ExecutionResult(execution=execution, verification=None)
+            return self._result(
+                proposal=proposal,
+                execution=execution,
+                verification=None,
+                details={"phase": "revalidation"},
+            )
 
         if canonical_digest(actual_preconditions) != canonical_digest(proposal.preconditions):
-            self.store.transition_execution(
+            failed = self.store.transition_execution(
                 execution_id,
                 ExecutionStatus.FAILED,
                 now=self.clock(),
@@ -106,6 +159,12 @@ class ExecutionEngine:
                     "expected_digest": canonical_digest(proposal.preconditions),
                     "actual_digest": canonical_digest(actual_preconditions),
                 },
+            )
+            self._result(
+                proposal=proposal,
+                execution=failed,
+                verification=None,
+                details={"phase": "revalidation", "reason": "stale"},
             )
             raise StaleProposalError("approved proposal is stale; create a new proposal")
 
@@ -141,6 +200,28 @@ class ExecutionEngine:
                 release_lock=False,
             )
             return ExecutionResult(execution=execution, verification=None)
+        except TransportError as exc:
+            if exc.transmission is TransmissionState.UNKNOWN:
+                execution = self.store.transition_execution(
+                    execution_id,
+                    ExecutionStatus.UNKNOWN,
+                    now=self.clock(),
+                    details={"phase": "submission", "error": str(exc)},
+                    release_lock=False,
+                )
+                return ExecutionResult(execution=execution, verification=None)
+            execution = self.store.transition_execution(
+                execution_id,
+                ExecutionStatus.FAILED,
+                now=self.clock(),
+                details={"phase": "submission", "error": str(exc)},
+            )
+            return self._result(
+                proposal=proposal,
+                execution=execution,
+                verification=None,
+                details={"phase": "submission", "transmission": exc.transmission},
+            )
         except Exception as exc:
             execution = self.store.transition_execution(
                 execution_id,
@@ -148,7 +229,12 @@ class ExecutionEngine:
                 now=self.clock(),
                 details={"phase": "submission", "error": str(exc)},
             )
-            return ExecutionResult(execution=execution, verification=None)
+            return self._result(
+                proposal=proposal,
+                execution=execution,
+                verification=None,
+                details={"phase": "submission"},
+            )
 
         self.store.transition_execution(
             execution_id,
@@ -181,7 +267,12 @@ class ExecutionEngine:
             details={"verification": verification},
             release_lock=outcome is not ExecutionStatus.UNKNOWN,
         )
-        return ExecutionResult(execution=execution, verification=verification)
+        return self._result(
+            proposal=proposal,
+            execution=execution,
+            verification=verification,
+            details={"phase": "verification"},
+        )
 
     def reconcile(
         self,
@@ -222,4 +313,9 @@ class ExecutionEngine:
             details={"reconciliation": verification},
             release_lock=outcome is not ExecutionStatus.UNKNOWN,
         )
-        return ExecutionResult(execution=current, verification=verification)
+        return self._result(
+            proposal=proposal,
+            execution=current,
+            verification=verification,
+            details={"phase": "read_only_reconciliation"},
+        )

@@ -126,12 +126,15 @@ def preflight_extraction(
     output_directory: Path,
     entries: tuple[ExtractionEntry, ...],
     helper: HelperPin,
+    expected_helper_path: Path = EXTRACT_HELPER,
     max_files: int = 10_000,
     max_source_bytes: int = 20_000_000_000,
 ) -> ExtractionPlan:
     exact_client = client_id(client)
     exact_flow = flow_id(flow)
     helper.verify()
+    if helper.path != expected_helper_path.resolve(strict=True):
+        raise ExtractionPreflightError("helper is not the configured extraction helper")
     if flow_state != "FINISHED":
         raise ExtractionPreflightError("datastore extraction requires an exact finished flow")
     if output_directory.exists() or not output_directory.is_absolute():
@@ -142,7 +145,13 @@ def preflight_extraction(
         raise ExtractionPreflightError("source inventory is empty")
     claimed: set[str] = set()
     for entry in entries:
-        if entry.kind != "regular_file" or entry.source_is_symlink or entry.source_size < 0:
+        if (
+            entry.kind != "regular_file"
+            or entry.source_is_symlink
+            or entry.source_size < 0
+            or len(entry.source_sha256) != 64
+            or any(character not in "0123456789abcdef" for character in entry.source_sha256)
+        ):
             raise ExtractionPreflightError("source inventory contains an unsafe file entry")
         destination = Path(entry.destination_relative)
         source = Path(entry.source_relative)
@@ -205,7 +214,15 @@ def postvalidate_extraction(
     expected = {
         item.destination_relative.casefold(): item for item in plan.entries
     }
-    actual = {item.destination_relative.casefold(): item for item in output_entries}
+    actual: dict[str, ExtractionEntry] = {}
+    for item in output_entries:
+        destination = Path(item.destination_relative)
+        if destination.is_absolute() or ".." in destination.parts:
+            raise ExtractionPreflightError("output path escaped the reviewed directory")
+        key = item.destination_relative.casefold()
+        if key in actual:
+            raise ExtractionPreflightError("output inventory contains a path collision")
+        actual[key] = item
     if set(expected) != set(actual):
         raise ExtractionPreflightError("output inventory does not match the reviewed plan")
     if truncation_detected:

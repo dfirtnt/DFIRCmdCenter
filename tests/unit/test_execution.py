@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from dfircmdcenter.core.approvals import ConsumedApprovalError, ControlStore
+from dfircmdcenter.core.audit import ReceiptWriter
 from dfircmdcenter.core.execution import ExecutionEngine, StaleProposalError, WriteOutcomeUnknown
 from dfircmdcenter.core.records import (
     Approval,
@@ -15,6 +16,7 @@ from dfircmdcenter.core.records import (
     Verification,
     VerificationStatus,
 )
+from dfircmdcenter.core.transport import TransmissionState, TransportError
 
 NOW = datetime(2026, 9, 15, 15, tzinfo=UTC)
 
@@ -91,6 +93,8 @@ def test_apply_submits_once_and_verifies(tmp_path: Path) -> None:
     assert result.verification is not None
     statuses = [event["event_type"] for event in store.audit_events()]
     assert statuses == [
+        "proposal.created",
+        "approval.recorded",
         "execution.reserved",
         "execution.revalidated",
         "execution.submitting",
@@ -176,3 +180,42 @@ def test_failed_reconciliation_remains_unknown(tmp_path: Path) -> None:
     assert reconciled.execution.status is ExecutionStatus.UNKNOWN
     assert reconciled.verification is None
 
+
+def test_transport_unknown_stays_locked_and_is_never_retried(tmp_path: Path) -> None:
+    store, candidate, approval = prepare(tmp_path)
+    submissions = 0
+
+    def timeout(_: Proposal) -> dict[str, str]:
+        nonlocal submissions
+        submissions += 1
+        raise TransportError("bounded timeout", transmission=TransmissionState.UNKNOWN)
+
+    result = ExecutionEngine(store, clock=lambda: NOW + timedelta(minutes=2)).apply(
+        proposal=candidate,
+        approval_id=approval.approval_id,
+        target_key="limacharlie:oid:rule:suspicious-process",
+        revalidate=lambda _: candidate.preconditions,
+        submit=timeout,
+        verify=lambda _proposal, _response: pytest.fail("unknown write must not verify yet"),
+    )
+    assert submissions == 1
+    assert result.execution.status is ExecutionStatus.UNKNOWN
+
+
+def test_terminal_execution_publishes_immutable_receipt(tmp_path: Path) -> None:
+    store, candidate, approval = prepare(tmp_path)
+    engine = ExecutionEngine(
+        store,
+        clock=lambda: NOW + timedelta(minutes=2),
+        receipt_writer=ReceiptWriter(tmp_path / "receipts"),
+    )
+    result = engine.apply(
+        proposal=candidate,
+        approval_id=approval.approval_id,
+        target_key="limacharlie:oid:rule:suspicious-process",
+        revalidate=lambda _: candidate.preconditions,
+        submit=lambda _: {"rule": "suspicious-process"},
+        verify=lambda _proposal, _response: verification(VerificationStatus.PASSED),
+    )
+    assert result.receipt_path is not None
+    assert result.receipt_path.is_file()

@@ -18,7 +18,11 @@ from dfircmdcenter.adapters.splunk.csv_normalization import (
     HostMapping,
     normalize_csv,
 )
-from dfircmdcenter.adapters.splunk.ingest import IngestBlockedError, build_ingest_proposal
+from dfircmdcenter.adapters.splunk.ingest import (
+    IngestBlockedError,
+    build_ingest_proposal,
+    build_oneshot_argv,
+)
 from dfircmdcenter.adapters.splunk.naming import (
     NamingError,
     normalize_host,
@@ -341,4 +345,33 @@ def test_ingest_proposal_binds_exact_governance_state(tmp_path: Path) -> None:
             parsing_contract_sha256="a" * 64,
             before_state={},
             created_at=NOW,
+        )
+
+
+def test_oneshot_command_requires_contained_exact_input(tmp_path: Path) -> None:
+    root = tmp_path / "normalized"
+    root.mkdir()
+    source = root / "events.csv"
+    source.write_text("fixture", encoding="utf-8")
+    binary = tmp_path / "splunk"
+    binary.write_text("fixture", encoding="utf-8")
+    argv = build_oneshot_argv(
+        splunk_binary=binary.resolve(),
+        normalized_path=source.resolve(),
+        index="dfir",
+        host="LAB-WIN11",
+        sourcetype="dfir:fixture:events:v1",
+        allowed_input_root=root,
+    )
+    assert argv[-3:] == ("lab-win11", "-sourcetype", "dfir:fixture:events:v1")
+    outside = tmp_path / "outside.csv"
+    outside.write_text("fixture", encoding="utf-8")
+    with pytest.raises(ValueError, match="outside"):
+        build_oneshot_argv(
+            splunk_binary=binary.resolve(),
+            normalized_path=outside.resolve(),
+            index="dfir",
+            host="lab-win11",
+            sourcetype="dfir:fixture:events:v1",
+            allowed_input_root=root,
         )

@@ -182,6 +182,7 @@ def test_datastore_extraction_preflight_blocks_escape_collision_symlink_and_drif
         "flow_state": "FINISHED",
         "output_directory": tmp_path / "fresh-output",
         "helper": pin,
+        "expected_helper_path": pin.path,
     }
     with pytest.raises(PathContainmentError):
         preflight_extraction(entries=(entry("../escape"),), **base)
@@ -200,13 +201,15 @@ def test_datastore_extraction_preflight_blocks_escape_collision_symlink_and_drif
 def test_datastore_postvalidation_detects_source_change_missing_output_and_truncation(
     tmp_path: Path,
 ) -> None:
+    pin = helper_pin(tmp_path)
     plan = preflight_extraction(
         client="C.clientone",
         flow="F.flowone",
         flow_state="FINISHED",
         output_directory=tmp_path / "fresh-output",
         entries=(entry(),),
-        helper=helper_pin(tmp_path),
+        helper=pin,
+        expected_helper_path=pin.path,
     )
     with pytest.raises(ExtractionPreflightError, match="source inventory changed"):
         postvalidate_extraction(
@@ -260,4 +263,3 @@ def test_helper_path_decoding_and_identifier_guards() -> None:
 def test_helper_hash_is_sha256(tmp_path: Path) -> None:
     pin = helper_pin(tmp_path)
     assert pin.sha256 == hashlib.sha256(b"fixture helper").hexdigest()
-

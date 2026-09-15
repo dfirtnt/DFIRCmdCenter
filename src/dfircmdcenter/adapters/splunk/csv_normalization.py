@@ -167,6 +167,8 @@ def normalize_csv(
         ("host_raw_input" if header == "host" and host_index == index else header)
         for index, header in enumerate(normalized_headers)
     ]
+    if host_index is not None and normalized_headers[host_index] == "host":
+        field_map[raw_headers[host_index]] = "host_raw_input"
     output_headers.extend(_GENERATED_FIELDS)
     normalized_rows: list[dict[str, str]] = []
     instants = []
