@@ -242,6 +242,61 @@ class ControlStore:
                 self._rollback(connection)
                 raise
 
+    def get_proposal(self, proposal_id: str) -> Proposal:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM proposals WHERE proposal_id = ?", (proposal_id,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(f"unknown proposal: {proposal_id}")
+        material = json.loads(row["material_json"])
+        if not isinstance(material, dict):
+            raise ApprovalError("stored proposal material is malformed")
+        try:
+            return Proposal(
+                proposal_id=row["proposal_id"],
+                proposal_digest=row["proposal_digest"],
+                platform=material["platform"],
+                operation=material["operation"],
+                scope=material["scope"],
+                preconditions=material["preconditions"],
+                policy_version=material["policy_version"],
+                dependency_hashes=material["dependency_hashes"],
+                validation=material["validation"],
+                expires_at=_parse_time(material["expires_at"]),
+                expected_effects=material["expected_effects"],
+                before_state=material["before_state"],
+                proposed_after_state=material["proposed_after_state"],
+                human_diff=material["human_diff"],
+                rollback_or_recovery=material["rollback_or_recovery"],
+                created_at=_parse_time(row["created_at"]),
+                schema_version=material["schema_version"],
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ApprovalError("stored proposal failed integrity validation") from exc
+
+    def latest_approval_for(self, proposal_digest: str) -> Approval | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                """
+                SELECT * FROM approvals WHERE proposal_digest = ?
+                ORDER BY approved_at DESC LIMIT 1
+                """,
+                (proposal_digest,),
+            ).fetchone()
+        if row is None:
+            return None
+        return Approval(
+            approval_id=row["approval_id"],
+            proposal_digest=row["proposal_digest"],
+            chat_reference=row["chat_reference"],
+            approved_at=_parse_time(row["approved_at"]),
+            expires_at=_parse_time(row["expires_at"]),
+            consumed_at=(
+                None if row["consumed_at"] is None else _parse_time(row["consumed_at"])
+            ),
+        )
+
     def record_approval(self, approval: Approval) -> None:
         expected = Approval.create(
             proposal_digest=approval.proposal_digest,

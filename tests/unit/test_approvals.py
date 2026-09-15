@@ -73,6 +73,9 @@ def test_private_database_permissions_and_one_time_consumption(tmp_path: Path) -
     assert database.parent.stat().st_mode & 0o777 == 0o700
     assert consumed.consumed_at == NOW + timedelta(minutes=2)
     assert store.get_execution("exe-first").status is ExecutionStatus.RESERVED
+    restored = store.get_proposal(candidate.proposal_id)
+    assert restored == candidate
+    assert store.latest_approval_for(candidate.proposal_digest) == consumed
     with pytest.raises(ConsumedApprovalError):
         store.reserve_execution(
             approval_id=approval.approval_id,
@@ -204,4 +207,3 @@ def test_pending_splunk_reservations_are_counted(tmp_path: Path) -> None:
 
     assert store.pending_splunk_bytes("2026-09-15") == 125
     assert store.pending_splunk_bytes("2026-09-16") == 0
-
