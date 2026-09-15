@@ -1,0 +1,208 @@
+schema_version: 1
+policy_id: splunk-ingest
+
+splunk_ingest_governance:
+  default: deny
+
+  approval:
+    required_for_each_dataset: true
+    approval_does_not_carry_forward: true
+    require_exact:
+      - source_path
+      - target_index
+      - sourcetype
+      - host_mapping
+      - estimated_uncompressed_volume
+      - covered_time_range
+
+  preflight:
+    required:
+      - inventory_active_monitors
+      - fingerprint_candidate_files
+      - identify_prior_ingest_receipts
+      - identify_existing_indexed_sources
+      - compare_event_time_ranges
+      - classify_overlap
+      - estimate_uncompressed_ingest_volume
+      - verify_remaining_daily_license_capacity
+
+  duplicates:
+    exact_duplicate: block
+    partial_overlap: block
+    alternate_representation_of_existing_data: block
+    a_new_filename_proves_new_data: false
+    override:
+      requires_separate_explicit_approval: true
+      requires_documented_analytical_need: true
+      requires_deduplication_strategy: true
+    compare:
+      - sha256
+      - source_path
+      - filename_and_size
+      - client_hunt_and_flow_ids
+      - artifact
+      - host
+      - source
+      - sourcetype
+      - event_identifiers
+      - event_time_range
+
+  license:
+    hard_daily_limit_source_bytes: 500_000_000
+    operational_daily_limit_source_bytes: 400_000_000
+    reserve_source_bytes: 100_000_000
+    include_pending_reservations: true
+    account_for_measurement_lag: conservatively
+    account_for_competing_monitored_inputs: conservatively
+    on_budget_uncertainty: block
+    on_reset_boundary_uncertainty: block
+    on_projected_operational_limit_exceeded: block
+    hard_limit_is_a_target: false
+
+  time:
+    display_timezone: America/New_York
+    daylight_saving_time: automatic
+    fixed_zone_names_forbidden:
+      - EST
+      - EDT
+    fixed_utc_offsets_forbidden:
+      - UTC-05:00
+      - UTC-04:00
+    preserve_original_event_timestamp: true
+    reports_and_search_bounds: America/New_York
+    workflow_timestamps: America/New_York
+    filenames: America/New_York
+    rendered_timestamps_must_include_numeric_offset: true
+    missing_or_ambiguous_source_timezone: block_and_review
+
+  verification:
+    confirm_indexed_event_count: true
+    confirm_actual_time_range: true
+    confirm_index_host_source_and_sourcetype: true
+    confirm_actual_license_usage: true
+    record_immutable_ingest_receipt: true
+
+splunk_naming:
+  index:
+    default: dfir
+    format: lowercase_letters_numbers_underscores_hyphens
+    pattern: "^[a-z0-9][a-z0-9_-]*$"
+    forbidden_substring: kvstore
+    create_per_file: false
+    create_per_date: false
+    create_per_source: false
+    create_per_host: false
+    case_separation_field: case_id
+    create_or_change_requires_separate_approval: true
+
+  host:
+    format: lowercase_fqdn_or_short_hostname
+    preserve_original_as: host_raw
+    never_use:
+      - ingesting_mac_hostname
+      - csv_filename
+      - case_id
+    single_host_csv: require_explicit_host
+    multi_host_csv: require_trusted_per_row_host_column_and_reviewed_mapping
+    missing_or_ambiguous_host: block_and_review
+
+  sourcetype:
+    format: "dfir:<producer>:<schema>:v<integer>"
+    examples:
+      - dfir:velociraptor:autoruns:v1
+      - dfir:recmd:registry_timeline:v1
+      - dfir:hayabusa:timeline:v1
+    identifies_schema_not:
+      - filename
+      - case
+      - date
+      - host
+    material_schema_change_requires_new_version: true
+    automatic_sourcetype_detection: forbidden
+
+csv_ingest:
+  method: approval_gated_one_shot
+  incoming_folder: var/splunk/incoming
+  incoming_folder_is_monitored: false
+
+  stages:
+    - place_file_in_unmonitored_incoming
+    - calculate_sha256_and_validate_original
+    - normalize_derived_copy_when_needed
+    - compare_original_and_normalized_hashes_with_prior_manifests
+    - compare_with_indexed_coverage
+    - validate_index_host_sourcetype_timestamp_and_volume
+    - present_exact_ingest_proposal
+    - obtain_exact_approval
+    - ingest_exact_approved_file_once
+    - verify_results
+    - write_immutable_receipt
+
+  validation:
+    encoding: utf-8
+    non_empty_header_required: true
+    headers_must_be_unique: true
+    normalized_headers: lowercase_snake_case
+    row_column_counts_must_match: true
+    timestamp_field_must_be_explicit: true
+    timestamp_parse_rate_required: 100_percent
+    host_mapping_must_be_explicit: true
+    preserve_original_file: true
+    preserve_original_timestamp: true
+    preserve_original_headers_with_recorded_field_map: true
+    ingest_original_and_normalized_copy: forbidden
+    malformed_rows: block
+    ambiguous_encoding: block
+    ambiguous_delimiter: block
+    unreliable_timestamp: block
+
+  time:
+    source_with_explicit_offset: honor_source_offset
+    source_with_z_suffix: treat_as_utc
+    source_without_timezone: require_documented_source_timezone_decision
+    permitted_local_assumption: America/New_York_only_when_evidence_establishes_it
+    splunk_display_timezone: America/New_York
+
+  splunk_parsing:
+    indexed_extractions: CSV
+    timestamp_fields: explicit
+    duplicate_search_time_field_extraction: disabled
+    sourcetype_configuration_required: true
+
+  receipt:
+    record:
+      - dataset_id
+      - original_sha256
+      - normalized_sha256
+      - source_path
+      - index
+      - host_mapping
+      - sourcetype
+      - source_byte_count
+      - csv_row_count
+      - eastern_event_time_range_with_offsets
+      - proposal_reference
+      - approval_reference
+      - indexed_event_count
+      - observed_license_usage
+      - verification_search_and_outcome
+
+monitored_inputs:
+  permitted_only_for: append_only_machine_generated_logs
+  forbidden_for: ad_hoc_forensic_csv
+  requires_separate_approval: true
+  overlap_preflight_required: true
+  no_file_enters_monitored_path_before_preflight: true
+  review_required:
+    - overlap_with_existing_monitor_stanzas
+    - expected_daily_volume
+    - rotation_and_rename_behavior
+    - crc_behavior
+    - initCrcLength
+    - crcSalt_reindex_risk
+    - index
+    - host
+    - source
+    - sourcetype
+    - timestamp_handling
+

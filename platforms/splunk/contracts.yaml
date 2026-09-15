@@ -1,0 +1,69 @@
+schema_version: 1
+platform: splunk
+contract_version: 1
+verified_at: "2026-09-15"
+product:
+  deployment: local_standalone_free
+  product_version: "10.4.3"
+  daily_license_bytes: 500000000
+  operational_ceiling_bytes: 400000000
+transport:
+  kind: local_https_and_cli
+  origins:
+    - https://127.0.0.1:8089
+  base_path: /services
+  authentication:
+    kind: local_instance_configuration
+    storage: external_only
+  redirects: disabled
+  cli:
+    executable: /Users/starlord/splunk/bin/splunk
+    shell: false
+pagination:
+  status: verified
+  style: atom_feed
+  request_fields: [count, offset]
+  completeness_requires: [paging.total, paging.offset, paging.perPage]
+rate_limit:
+  status: unknown
+conditional_update:
+  status: unsupported_for_ingest
+idempotency:
+  status: unsupported_for_oneshot
+capabilities:
+  - name: server_info
+    mode: read
+    enabled: true
+    surface: GET /server/info
+    required_permissions: [local_splunk_read]
+  - name: list_indexes
+    mode: read
+    enabled: true
+    surface: GET /data/indexes
+    required_permissions: [local_splunk_read]
+  - name: license_state
+    mode: read
+    enabled: true
+    surface: GET /licenser/localpeer and GET /licenser/usage
+    required_permissions: [local_splunk_read]
+  - name: inspect_inputs
+    mode: read
+    enabled: true
+    surface: GET /data/inputs/* and fixed CLI btool inputs list
+    required_permissions: [local_splunk_read]
+  - name: oneshot_csv_ingest
+    mode: write
+    enabled: false
+    disabled_reason: non-idempotent ingestion remains disabled until governance and receipt reconciliation are implemented
+    surface: fixed CLI add oneshot
+    required_permissions: [local_splunk_ingest]
+  - name: change_index_or_input_config
+    mode: write
+    enabled: false
+    disabled_reason: configuration deployment and restart verification are not implemented yet
+    surface: reviewed files under the dfircmdcenter Splunk app
+    required_permissions: [local_filesystem_write, local_splunk_restart]
+sources:
+  - https://help.splunk.com/en/splunk-enterprise/rest-api-reference/10.4/introduction/endpoints-reference-list
+  - https://help.splunk.com/en/splunk-enterprise/administer/admin-manual/9.4/configure-splunk-licenses/about-splunk-free
+

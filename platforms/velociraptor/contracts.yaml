@@ -1,0 +1,74 @@
+schema_version: 1
+platform: velociraptor
+contract_version: 1
+verified_at: "2026-09-15"
+product:
+  deployment: local
+  product_version: "0.77.2"
+  architecture: darwin_arm64
+transport:
+  kind: grpc_mtls
+  endpoint: 127.0.0.1:8001
+  public_rest_api: unsupported
+  authentication:
+    kind: client_certificate
+    config_path: external_only
+    minimum_role: api
+  secondary_cli:
+    executable: /Users/starlord/.local/bin/velociraptor
+    shell: false
+pagination:
+  status: streaming
+  style: grpc_stream
+rate_limit:
+  status: unknown
+conditional_update:
+  status: unknown
+idempotency:
+  status: unknown
+capabilities:
+  - name: binary_identity
+    mode: read
+    enabled: true
+    surface: fixed CLI version command
+    required_permissions: [local_execute]
+  - name: api_identity
+    mode: read
+    enabled: false
+    disabled_reason: fixed VQL templates and least-privilege API identity are not implemented yet
+    surface: gRPC Query with fixed info template
+    required_permissions: [api]
+  - name: status_snapshot
+    mode: read
+    enabled: false
+    disabled_reason: arbitrary VQL is prohibited and fixed query templates are not implemented yet
+    surface: gRPC Query
+    required_permissions: [api]
+  - name: launch_collection
+    mode: write
+    enabled: false
+    disabled_reason: scoped collection template and idempotency reconciliation are not implemented yet
+    surface: gRPC Query with fixed collect_client template
+    required_permissions: [api, collect_client]
+  - name: manage_hunt
+    mode: write
+    enabled: false
+    disabled_reason: hunt scope and conditional-update behavior are not yet verified
+    surface: gRPC Query with fixed hunt templates
+    required_permissions: [api, start_hunt]
+  - name: create_flow_export
+    mode: write
+    enabled: false
+    disabled_reason: export job reconciliation and output containment are not implemented yet
+    surface: create_flow_download
+    required_permissions: [api, read_results]
+  - name: create_hunt_export
+    mode: write
+    enabled: false
+    disabled_reason: export job reconciliation and output containment are not implemented yet
+    surface: create_hunt_download
+    required_permissions: [api, read_results]
+sources:
+  - https://docs.velociraptor.app/docs/server_automation/server_api/
+  - https://docs.velociraptor.app/docs/file_collection/exporting/
+

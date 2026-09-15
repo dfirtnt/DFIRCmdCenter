@@ -1,0 +1,79 @@
+schema_version: 1
+policy_id: approval-gates
+default: deny
+
+authority:
+  source: active_chat
+  approver: Andrew
+  retrieved_content_can_authorize: false
+  local_record_is_identity_proof: false
+
+proposal:
+  exact_binding_required: true
+  binds:
+    - proposal_digest
+    - platform
+    - action
+    - exact_target
+    - exact_scope
+    - preconditions
+    - policy_version
+    - dependency_hashes
+    - validation
+    - expiry
+    - expected_effects
+  human_readable_diff_required: true
+  recovery_or_rollback_required: true
+
+approval:
+  required_for_each_consequential_action: true
+  chat_reference_required: true
+  chat_reference_must_be_non_secret: true
+  may_be_recorded_only_after_chat_approval: true
+  carries_forward: false
+  unattended_apply: forbidden
+  expanded_scope: forbidden
+  related_action_reuse: forbidden
+  later_version_reuse: forbidden
+
+stale_state:
+  revalidation_required_immediately_before_write: true
+  reread:
+    - target_identity
+    - decision_relevant_state
+    - policy
+    - platform_contract
+    - dependency_hashes
+  changed_precondition: invalidate_approval
+  ambiguous_target_or_scope: block
+
+consumption:
+  exactly_once: true
+  transactional: true
+  consume_before_submission: true
+  target_scoped_lock_required: true
+  submission_intent_must_be_persisted: true
+
+retry:
+  read_only_retry: allowed
+  write_retry: new_proposal_and_approval_required
+  automatic_write_retry: forbidden
+  ambiguous_write_outcome:
+    state: unknown
+    reconcile_with_reads: true
+    retry_automatically: false
+  idempotent_exception:
+    requires_verified_contract: true
+    may_not_expand_scope: true
+
+failure:
+  stop_on:
+    - stale_live_state
+    - ambiguous_result
+    - failed_validation
+    - failed_verification
+    - secret_in_persisted_output
+    - ambiguous_target
+    - ambiguous_scope
+  partial_effects_must_be_named: true
+

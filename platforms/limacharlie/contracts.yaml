@@ -1,0 +1,75 @@
+schema_version: 1
+platform: limacharlie
+contract_version: 1
+verified_at: "2026-09-15"
+product:
+  deployment: cloud
+  product_version: unknown
+  api_spec_version: unknown
+transport:
+  kind: https
+  origins:
+    - https://api.limacharlie.io
+  base_path: /v1
+  authentication:
+    kind: bearer_token
+    storage: external_only
+  redirects: disabled
+pagination:
+  status: unknown
+  style: unknown
+rate_limit:
+  status: unknown
+conditional_update:
+  status: unknown
+idempotency:
+  status: unknown
+capabilities:
+  - name: list_rules
+    mode: read
+    enabled: true
+    surface: GET /rules/{oid}
+    required_permissions: [dr.list]
+  - name: get_rule
+    mode: read
+    enabled: true
+    surface: GET /hive/dr-general/{oid}/{rule_name}/data
+    required_permissions: [dr.list]
+  - name: get_rule_metadata
+    mode: read
+    enabled: true
+    surface: GET /hive/dr-general/{oid}/{rule_name}/mtd
+    required_permissions: [dr.list]
+  - name: validate_rule
+    mode: read
+    enabled: true
+    surface: POST /hive/dr-general/{oid}/{rule_name}/validate
+    required_permissions: [dr.list]
+    retry: never
+  - name: create_or_update_rule
+    mode: write
+    enabled: false
+    disabled_reason: POST replaces data and metadata without a documented conditional update or idempotency key
+    surface: POST /hive/dr-general/{oid}/{rule_name}/data
+    required_permissions: [dr.set]
+  - name: change_rule_metadata
+    mode: write
+    enabled: false
+    disabled_reason: metadata replacement requires read-modify-write and no conditional update is documented
+    surface: POST /hive/dr-general/{oid}/{rule_name}/mtd
+    required_permissions: [dr.set]
+  - name: delete_rule
+    mode: write
+    enabled: false
+    disabled_reason: delete has no documented idempotency or conditional update contract
+    surface: DELETE /hive/dr-general/{oid}/{rule_name}
+    required_permissions: [dr.set]
+  - name: replay_rule
+    mode: write
+    enabled: false
+    disabled_reason: replay persistence and idempotency semantics require fixture and live verification
+    surface: POST /rules/{oid}/replay
+    required_permissions: [dr.list]
+sources:
+  - https://docs.limacharlie.io/3-detection-response/
+

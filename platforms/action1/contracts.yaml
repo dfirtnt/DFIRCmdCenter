@@ -1,0 +1,67 @@
+schema_version: 1
+platform: action1
+contract_version: 1
+verified_at: "2026-09-15"
+product:
+  deployment: cloud
+  product_version: unknown
+  api_spec_version: "3.1.0"
+transport:
+  kind: https
+  origins:
+    - https://app.na-2.action1.com
+  base_path: /api/3.0
+  authentication:
+    kind: oauth2_client_credentials
+    token_path: /oauth2/token
+    storage: external_only
+  redirects: disabled
+pagination:
+  status: verified
+  style: result_page
+  request_fields: [from, limit]
+  response_fields: [items, total_items, limit, next_page, prev_page]
+rate_limit:
+  status: verified_dynamic
+  recommended_max_requests_per_minute: 30
+  response_status: 429
+  retry_after:
+    response_json_field: details.retry_after
+    header_support: unknown
+conditional_update:
+  status: unknown
+idempotency:
+  status: unknown
+capabilities:
+  - name: identity
+    mode: read
+    enabled: true
+    surface: GET /me
+    required_permissions: [authenticated_api_credential]
+  - name: list_organizations
+    mode: read
+    enabled: true
+    surface: GET /organizations
+    required_permissions: [organization_read]
+  - name: list_endpoints
+    mode: read
+    enabled: true
+    surface: GET /endpoints/managed/{org_id}
+    required_permissions: [endpoint_read]
+  - name: inspect_deployment
+    mode: read
+    enabled: false
+    disabled_reason: exact automation history API surface not yet verified
+    surface: unknown
+    required_permissions: [unknown]
+  - name: change_automation
+    mode: write
+    enabled: false
+    disabled_reason: conditional update and idempotency semantics are not documented
+    surface: unknown
+    required_permissions: [unknown]
+sources:
+  - https://www.action1.com/api-documentation/authentication/
+  - https://www.action1.com/api-documentation/making-example-calls/
+  - https://www.action1.com/api-documentation/how-action1-api-works/
+
