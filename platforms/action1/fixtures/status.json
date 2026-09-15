@@ -1,0 +1,61 @@
+{
+  "identity": {
+    "account_id": "fixture-account",
+    "region": "na-2"
+  },
+  "organizations": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {"id": "org-fixture", "name": "Personal Lab"}
+      ]
+    }
+  ],
+  "endpoints": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {"id": "endpoint-fixture", "organization_id": "org-fixture", "name": "lab-win11"}
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {"id": "package-velociraptor-0772", "name": "DFIRcmdCenter - Velociraptor", "version": "0.77.2"}
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {"id": "automation-fixture", "name": "Deploy Velociraptor 0.77.2", "enabled": true}
+      ]
+    }
+  ],
+  "deployments": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {
+          "id": "deployment-fixture",
+          "endpoint_id": "endpoint-fixture",
+          "status": "warning",
+          "warning": "Installer has no publisher signature; installation verification remains required"
+        }
+      ]
+    }
+  ]
+}

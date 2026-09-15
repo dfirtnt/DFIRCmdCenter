@@ -1,0 +1,45 @@
+{
+  "identity": {
+    "version": "10.4.3",
+    "instance": "splunk-fixture"
+  },
+  "binding": {
+    "management": "127.0.0.1:8089",
+    "web": "127.0.0.1:8000",
+    "loopback_only": true
+  },
+  "indexes": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {"name": "dfir", "disabled": false}
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 0,
+      "items": []
+    }
+  ],
+  "license": {
+    "type": "free",
+    "daily_limit_bytes": 500000000,
+    "operational_ceiling_bytes": 400000000
+  },
+  "daily_usage": {
+    "license_day": "2026-09-15",
+    "measured_bytes": 12500000,
+    "measurement_complete": true,
+    "pending_reserved_bytes": 0
+  },
+  "reset_boundary": {
+    "timezone": "America/New_York",
+    "next_reset": "2026-09-16T00:00:00-04:00",
+    "confirmed": true
+  }
+}

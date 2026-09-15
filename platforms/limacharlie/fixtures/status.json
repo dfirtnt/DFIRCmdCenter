@@ -1,0 +1,29 @@
+{
+  "identity": {
+    "organization_id": "oid-fixture",
+    "name": "Personal Lab"
+  },
+  "rules": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {
+          "name": "windows-suspicious-powershell",
+          "enabled": true,
+          "version": 1,
+          "data": {
+            "detect": {"event": "NEW_PROCESS", "op": "contains", "path": "event/COMMAND_LINE", "value": "-enc"},
+            "respond": [{"action": "report", "name": "windows-suspicious-powershell"}]
+          },
+          "usr_mtd": {
+            "author": "DFIR Command Center",
+            "description": "Fixture report-only detection",
+            "false_positives": ["Reviewed administrative automation"]
+          }
+        }
+      ]
+    }
+  ]
+}

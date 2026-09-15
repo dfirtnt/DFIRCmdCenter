@@ -1,0 +1,53 @@
+{
+  "identity": {
+    "name": "velociraptor",
+    "version": "0.77.2",
+    "system": "darwin",
+    "architecture": "arm64",
+    "server_id": "velo-fixture"
+  },
+  "clients": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {"client_id": "C.fixture", "fqdn": "lab-win11.example.test", "labels": ["lab"], "last_seen_at": "2026-09-15T13:00:00Z"}
+      ]
+    }
+  ],
+  "hunts": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {"hunt_id": "H.fixture", "state": "STOPPED", "artifact": "Windows.System.Pslist"}
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {"client_id": "C.fixture", "flow_id": "F.fixture", "state": "FINISHED", "artifact": "Windows.System.Pslist", "rows": 12, "uploads": 0}
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "status": 200,
+      "offset": 0,
+      "total": 1,
+      "items": [
+        {"name": "Windows.System.Pslist", "definition_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+      ]
+    }
+  ],
+  "helper_hashes": {
+    "check-collection-logs.py": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "extract-evidence.py": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  }
+}
