@@ -10,6 +10,7 @@ config.local.*
 .dfircmdcenter/
 
 # Python caches and environments.
+/.worktrees/
 __pycache__/
 *.py[cod]
 .pytest_cache/

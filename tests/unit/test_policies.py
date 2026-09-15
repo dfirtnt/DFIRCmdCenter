@@ -59,6 +59,7 @@ def test_splunk_policy_has_approved_governance_controls() -> None:
         ".env.local",
         "settings.local.yaml",
         ".dfircmdcenter/session.json",
+        ".worktrees/parallel-build/file.py",
         "src/dfircmdcenter/__pycache__/config.cpython-312.pyc",
         ".coverage",
         "htmlcov/index.html",
@@ -73,4 +74,3 @@ def test_private_and_generated_paths_are_ignored(private_path: str) -> None:
     )
 
     assert result.returncode == 0, private_path
-
