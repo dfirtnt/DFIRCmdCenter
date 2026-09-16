@@ -194,6 +194,7 @@ The project exports the current live rules before proposing changes. Rule creati
 
 - Binary: `/Users/starlord/.local/bin/velociraptor`
 - Version: `0.77.2`, Darwin ARM64
+- Local gRPC API: `127.0.0.1:8501` with mutual-certificate authentication
 - Active server config path: `/Users/starlord/.dfirmedic/velociraptor/server.config.yaml`
 - Datastore root: `/Users/starlord/.dfirmedic/velociraptor/datastore`
 - Reusable DFIRMedic workspace: `/Users/starlord/Code/Active/DFIRMedic`

@@ -173,6 +173,24 @@ def test_subprocess_requires_an_absolute_allowlisted_executable_and_operation() 
         transport.run([str(printf), "%d", "1"])
 
 
+def test_subprocess_can_require_an_exact_argument_vector() -> None:
+    printf = _command("printf")
+    transport = SubprocessTransport(
+        [
+            ExecutablePolicy(
+                executable=printf,
+                allowed_argument_prefixes=(("%s", "safe"),),
+                stdout_line_allowlist=(r"safe",),
+                require_exact_arguments=True,
+            )
+        ]
+    )
+
+    assert transport.run([str(printf), "%s", "safe"]).stdout == "safe"
+    with pytest.raises(UnsafeTransportInput, match="operation"):
+        transport.run([str(printf), "%s", "safe", "extra"])
+
+
 def test_subprocess_uses_no_shell_and_filters_then_redacts_output(tmp_path: Path) -> None:
     printf = _command("printf")
     marker = tmp_path / "must-not-exist"

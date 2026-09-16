@@ -525,6 +525,7 @@ class ExecutablePolicy:
     allowed_output_roots: tuple[Path, ...] = ()
     stdout_line_allowlist: tuple[str, ...] = ()
     stderr_line_allowlist: tuple[str, ...] = ()
+    require_exact_arguments: bool = False
 
     def __post_init__(self) -> None:
         if not self.executable.is_absolute():
@@ -597,10 +598,15 @@ class SubprocessTransport:
         policy = self._policies.get(executable)
         if policy is None:
             raise UnsafeTransportInput("subprocess executable is not allowlisted")
-        if not any(
-            tuple(argv[1 : 1 + len(prefix)]) == prefix
-            for prefix in policy.allowed_argument_prefixes
-        ):
+        requested_arguments = tuple(argv[1:])
+        if policy.require_exact_arguments:
+            operation_allowed = requested_arguments in policy.allowed_argument_prefixes
+        else:
+            operation_allowed = any(
+                requested_arguments[: len(prefix)] == prefix
+                for prefix in policy.allowed_argument_prefixes
+            )
+        if not operation_allowed:
             raise UnsafeTransportInput("subprocess operation is not allowlisted")
 
         safe_cwd = self._validate_cwd(cwd, policy)
