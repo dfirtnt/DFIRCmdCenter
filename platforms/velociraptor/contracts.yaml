@@ -8,7 +8,7 @@ product:
   architecture: darwin_arm64
 transport:
   kind: grpc_mtls
-  endpoint: 127.0.0.1:8001
+  endpoint: 127.0.0.1:8501
   public_rest_api: unsupported
   authentication:
     kind: client_certificate
@@ -34,15 +34,13 @@ capabilities:
     required_permissions: [local_execute]
   - name: api_identity
     mode: read
-    enabled: false
-    disabled_reason: fixed VQL templates and least-privilege API identity are not implemented yet
-    surface: gRPC Query with fixed info template
+    enabled: true
+    surface: gRPC Query with fixed whoami and current-org projection
     required_permissions: [api]
   - name: status_snapshot
     mode: read
-    enabled: false
-    disabled_reason: arbitrary VQL is prohibited and fixed query templates are not implemented yet
-    surface: gRPC Query
+    enabled: true
+    surface: gRPC Query with exact clients, hunts, flows, and artifact projections
     required_permissions: [api]
   - name: launch_collection
     mode: write
@@ -71,4 +69,3 @@ capabilities:
 sources:
   - https://docs.velociraptor.app/docs/server_automation/server_api/
   - https://docs.velociraptor.app/docs/file_collection/exporting/
-

@@ -4,6 +4,10 @@ The configured local binary is `/Users/starlord/.local/bin/velociraptor` and the
 server contract is 0.77.2 on Darwin arm64. The API configuration remains outside this
 repository and its secret-bearing contents are never read into output.
 
+The verified local gRPC API listener is `127.0.0.1:8501`. Live status uses the
+official binary's API client with exact argument vectors and compiled-in read-only VQL
+templates. The separate service on port 8001 is not Velociraptor.
+
 Immediate collection and hunt proposals use exact client IDs. If a label is used for an
 immediate operation, resolve it to an immutable reviewed client list and revalidate that
 membership before submission. A standing label hunt is different: it must explicitly
@@ -25,4 +29,3 @@ modifies the datastore. It requires a stable source inventory, fresh exclusive o
 directory, pinned helper hash, decoded-path/collision/symlink/resource preflight, and
 post-extraction inventory and truncation checks. Any uncertainty falls back to the
 supported export path.
-
