@@ -1,0 +1,55 @@
+schema_version: 1
+module:
+  id: telemetry.sysmon
+  version: 1.0.0
+  scope: endpoint
+  release_status: staged-not-tested
+  purpose: >-
+    Install Microsoft Sysmon 15.22 on a Windows 11 x64 client with the
+    hash-pinned Olaf Hartong balanced configuration, then verify local health
+    without treating package execution as proof of LimaCharlie ingestion.
+  supported_platforms:
+    - product: Windows 11
+      minimum_release: 22H2
+      architecture: x64
+  prerequisites:
+    - The Action1 execution context is elevated LocalSystem or administrator.
+    - No Sysmon service is present unless this exact module owns the installation.
+    - LimaCharlie WEL collection for Microsoft-Windows-Sysmon/Operational is separately configured.
+  unsupported_or_out_of_scope:
+    - Windows 10; Sysmon 15.22 vendor support begins with Windows 11 clients.
+    - Windows Server; this family-endpoint module intentionally rejects server ProductType values.
+    - Updating or adopting a pre-existing Sysmon installation.
+    - Automatic configuration tuning, exclusions, or response actions.
+    - Honeypot or malware-research systems.
+  modes:
+    - enforce
+    - verify-only
+  action:
+    install:
+      type: Action1 multi-file custom package
+      status: source-staged-not-uploaded
+      bundle: Sysmon-15.22-olaf-balanced-a507259-telemetry-sysmon-1.0.0.zip
+      launch_file: Install-TelemetrySysmon.ps1
+    verify:
+      type: Action1 Script Library PowerShell
+      status: source-staged-not-uploaded
+      script_file: scripts/Test-TelemetrySysmon.ps1
+    rollback:
+      type: Action1 multi-file custom package
+      status: source-staged-not-uploaded
+      bundle: Sysmon-15.22-olaf-balanced-a507259-telemetry-sysmon-1.0.0.zip
+      launch_file: Uninstall-TelemetrySysmon.ps1
+  expected_effects:
+    - The Sysmon64 service runs automatically.
+    - The SysmonDrv boot-start driver runs.
+    - The latest Event ID 16 records the pinned configuration SHA-256.
+    - A normal Sysmon event follows the configuration event without Event ID 255 errors.
+  promotion_gate: >-
+    A supported Windows 11 test endpoint must show Action1 terminal success,
+    a clean local verifier result, fresh Sysmon events from the same correlated
+    LimaCharlie sensor, and continuing Action1, LimaCharlie, and Velociraptor
+    health before this version is release-eligible.
+  recovery: >-
+    See rollback.md. Rollback is a separate exact endpoint action, requires the
+    module ownership state, and never uses force removal automatically.

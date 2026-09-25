@@ -1,0 +1,42 @@
+schema_version: 1
+module:
+  id: validation.endpoint-health
+  version: 1.0.0
+  scope: endpoint
+  release_status: staged-not-tested
+  purpose: >-
+    Collect a bounded, normalized Windows 11 security preflight and evaluate local
+    readiness without changing endpoint configuration or exposing raw device identity.
+  supported_platforms:
+    - product: Windows 11
+      minimum_release: 24H2
+      architecture: x64
+      editions:
+        - Home
+        - Pro
+  prerequisites:
+    - Windows PowerShell 5.1 is present.
+    - The Action1 execution context is elevated for Secure Boot and Device Guard reads.
+    - Windows Security Center and the NetSecurity PowerShell module are available.
+  unsupported_or_out_of_scope:
+    - Windows Server and Windows 10 release eligibility.
+    - ARM64 and x86 package acceptance for version 1.0.0.
+    - Emitting, persisting, or logging hostnames, user identities, serial numbers, MAC or IP addresses, platform IDs, recovery material, TPM owner data, or raw provider-controlled strings.
+    - Determining antivirus subscription, license, renewal, or trial status.
+    - Proving Action1, LimaCharlie, or Velociraptor cloud check-in or cross-platform identity from local service state.
+  modes:
+    - verify-only
+  action:
+    type: Action1 Script Library PowerShell
+    status: source-staged-not-uploaded
+    changes_endpoint_state: false
+    script_file: scripts/Test-EndpointHealth.ps1
+  expected_effects:
+    - No endpoint configuration changes; the script emits normalized read-only evidence only.
+    - A third-party active antivirus provider defers Defender-dependent controls pending an operator decision.
+    - Missing or inaccessible evidence remains unknown, unsupported, unavailable, or partial rather than being treated as healthy.
+  promotion_gate: >-
+    A supported Windows 11 x64 endpoint must produce a schema-valid local observation,
+    and fresh Action1, LimaCharlie, and Velociraptor evidence must independently establish
+    strong identity correlation and current platform health before this module is verified.
+  recovery: See rollback.md. The module changes no endpoint state and has no rollback action.

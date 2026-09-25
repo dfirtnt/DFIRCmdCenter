@@ -1,0 +1,90 @@
+schema_version: 1
+module: telemetry.limacharlie-wel
+version: 1.0.0
+verification:
+  local_preflight:
+    - The reported platform is a Windows 11 client at build 22621 or later on x64.
+    - The parameterless read-only script returns Passed true for all required core channels.
+    - Each declared source reports only its channel, module group, bounded status, and enabled state.
+    - Conditional or deferred channels may be unavailable without making the core preflight pass ambiguous.
+  limacharlie:
+    - A live before-state and post-change read prove Event Collection/Exfil has WEL enabled for the applicable Windows rule.
+    - Enabling WEL in Event Collection/Exfil is a separate approved platform action; this module never enables it automatically.
+    - Each group is a separate rule and tag with a private complete impacted-SID set re-read immediately before a write.
+    - Bind every observation to the exact correlated sensor at routing/sid.
+    - Require routing/event_type to equal WEL and use routing/event_time as the authoritative event timestamp.
+    - Bind every observation to event/EVENT/System/Channel and event/EVENT/System/EventID.
+    - Require event time after the approved collection change in an exact UTC observation window.
+    - Preserve event bodies only inside LimaCharlie access controls; do not copy them into validation receipts.
+    - Treat rule creation without a fresh expected event as applied-awaiting-telemetry, not verified.
+  retention_and_privacy:
+    - Current product documentation states that EDR telemetry has one year of retention; verify the live plan before approval.
+    - Do not guess or set a WEL-specific days_retention value without a live supported schema and documented semantics.
+    - Event bodies may contain usernames, command lines, scripts, paths, network data, and host data.
+    - Do not collect the Application log, PowerShell transcripts, raw EVTX files, or PowerShellCore in version 1.0.0.
+  safety:
+    - All detection expectations are report-only and non-executable.
+    - Do not isolate, kill, block, task, or change sensor tags as an automatic response.
+    - Local preflight success does not establish LimaCharlie ingestion.
+test_event_mappings:
+  security:
+    channel: Security
+    event_ids: [4688]
+    method: >-
+      After telemetry.windows-audit is validated, launch a benign command in a
+      fresh process under a separate approved endpoint action.
+  system:
+    channel: System
+    event_ids: [100]
+    method: >-
+      Create one benign custom System event with eventcreate only under a
+      separate approval, then record the exact UTC boundary.
+  powershell:
+    channel: Microsoft-Windows-PowerShell/Operational
+    event_ids: [4103, 4104]
+    method: >-
+      After telemetry.powershell is locally validated, use a fresh Windows
+      PowerShell 5.1 session under a separate approved endpoint action.
+  sysmon:
+    channel: Microsoft-Windows-Sysmon/Operational
+    event_ids: [1, 16]
+    method: >-
+      After Sysmon installation, perform a LimaCharlie sensor restart only as a
+      separate approved endpoint action and confirm reconnect. Then use the fresh
+      process event and Event ID 16 from the telemetry.sysmon test; never restart
+      automatically and do not reinstall merely to generate data.
+  task_scheduler:
+    channel: Microsoft-Windows-TaskScheduler/Operational
+    event_ids: [106, 141, 142]
+    method: >-
+      Create and remove a temporary disabled no-op scheduled item only under a
+      separate approval; otherwise wait for a naturally occurring event.
+  wmi_activity:
+    channel: Microsoft-Windows-WMI-Activity/Operational
+    event_ids: passive-only
+    examples: [5857, 5858]
+    method: >-
+      Passively observe naturally occurring provider-start or failed/cancelled
+      client-operation events. A normal read-only query is not guaranteed to
+      produce either example; do not enable debug or trace channels.
+  appcontrol:
+    channels:
+      - Microsoft-Windows-CodeIntegrity/Operational
+      - Microsoft-Windows-AppLocker/MSI and Script
+    event_ids: passive-only
+    method: >-
+      Keep conditional until the corresponding audit policy is deployed; use
+      only naturally occurring events and do not run untrusted software.
+  defender:
+    channel: Microsoft-Windows-Windows Defender/Operational
+    event_ids: passive-only
+    method: >-
+      Defer validation while a third-party antivirus product is primary and use
+      only naturally occurring events if Microsoft Defender later becomes primary.
+failure_and_ambiguity:
+  - A local source that is enabled is only available; it is not proven ingested.
+  - A successful LimaCharlie change without a fresh matching event is applied-awaiting-telemetry.
+  - Missing exact sensor correlation, before-state, live schema, or post-change event evidence blocks promotion.
+  - Missing live Event Collection/Exfil WEL enablement evidence blocks promotion.
+  - Missing separately approved sensor restart and reconnect evidence after Sysmon installation blocks Sysmon ingestion validation.
+  - An ambiguous platform write result requires a fresh read-only export; never resubmit automatically.

@@ -1,0 +1,44 @@
+schema_version: 1
+module: telemetry.sysmon
+version: 1.0.0
+reviewed_on: 2026-09-19
+artifacts:
+  - name: install
+    path: scripts/Install-TelemetrySysmon.ps1
+    sha256: 870d9876c2710cc5d822f0beb6405ebd1bce76a653fe735e83f5bb745f1b6805
+    origin: locally-authored, offline-staged Action1 package source
+  - name: verify
+    path: scripts/Test-TelemetrySysmon.ps1
+    sha256: f62b25c8d7698de62d0f1a451e93b8f7033545dd5516bf7c7e6df363d5371818
+    origin: locally-authored, offline-staged Action1 Script Library source
+  - name: rollback
+    path: scripts/Uninstall-TelemetrySysmon.ps1
+    sha256: c4ba985f9aa670fafee77b9f252eee540d59a601aeca2b9f15ca59df1eb67571
+    origin: locally-authored, offline-staged Action1 package source
+package_inputs:
+  - name: microsoft-source-zip
+    filename: Sysmon.zip
+    version: "15.22"
+    sha256: 00ecf1b46aec99299d3ae0bca79dc621458bd014b20b509d7c5c8e8c8611aa54
+    origin: https://download.sysinternals.com/files/Sysmon.zip
+  - name: sysmon64
+    filename: Sysmon64.exe
+    version: "15.22"
+    sha256: 83d31f2478dc6716cfdbf69e5c384bf043072b5f0d8d7b2eea365f709fda4352
+    origin: extracted from the pinned Microsoft source ZIP; kept outside version control
+  - name: olaf-balanced-config
+    filename: sysmonconfig.xml
+    commit: a5072591e173b7f7a9fe518ebd5c10e5313ef6f8
+    schema_version: "4.90"
+    sha256: 4516404fa30ee87cea558567820cdc78863cc4ab07889519e49eac3cca92e0d2
+    origin: https://github.com/olafhartong/sysmon-modular/blob/a5072591e173b7f7a9fe518ebd5c10e5313ef6f8/sysmonconfig.xml
+deployment_bundle:
+  filename: Sysmon-15.22-olaf-balanced-a507259-telemetry-sysmon-1.0.0.zip
+  sha256: 77bdecd54d2c4841c398a91dc08f505b459d9e83adef5e1efb144337857f861c
+  storage: ignored private staging and private Action1 Cloud only
+  members:
+    - Sysmon64.exe
+    - sysmonconfig.xml
+    - Install-TelemetrySysmon.ps1
+    - Uninstall-TelemetrySysmon.ps1
+  tracked_scripts_match_bundle: true

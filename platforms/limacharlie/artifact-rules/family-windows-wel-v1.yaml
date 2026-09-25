@@ -1,0 +1,93 @@
+schema_version: 1
+template:
+  id: family-windows-wel-v1
+  version: 1.0.0
+  kind: limacharlie-artifact-collection-desired-state
+  status: prepared-not-live-schema-validated
+  purpose: >-
+    Declare the bounded Windows Event Log streams intended for exact tagged
+    family Windows 11 sensors without claiming to be a vendor API payload.
+  scope:
+    platforms: [windows]
+    exact_sensor_scope_required: true
+    tag_is_scope_authority: false
+    private_resolved_sid_manifest_required: true
+    target_cardinality_per_endpoint_proposal: 1
+    immediate_prewrite_membership_reread_required: true
+    abort_on_membership_drift: true
+  groups:
+    - id: core
+      rule_id: family-windows-wel-core-v1
+      sensor_tag: family-windows-wel-core-v1
+      default_state: required
+      patterns:
+        - "wel://Security:*"
+        - "wel://System:*"
+        - "wel://Microsoft-Windows-PowerShell/Operational:*"
+        - "wel://Microsoft-Windows-TaskScheduler/Operational:*"
+        - "wel://Microsoft-Windows-WMI-Activity/Operational:*"
+    - id: sysmon
+      rule_id: family-windows-wel-sysmon-v1
+      sensor_tag: family-windows-wel-sysmon-v1
+      default_state: conditional
+      condition: telemetry.sysmon is locally validated on the exact sensor
+      patterns:
+        - "wel://Microsoft-Windows-Sysmon/Operational:*"
+    - id: appcontrol
+      rule_id: family-windows-wel-appcontrol-v1
+      sensor_tag: family-windows-wel-appcontrol-v1
+      default_state: conditional
+      condition: corresponding Code Integrity or AppLocker audit policy is in scope
+      patterns:
+        - "wel://Microsoft-Windows-CodeIntegrity/Operational:*"
+        - "wel://Microsoft-Windows-AppLocker/MSI and Script:*"
+    - id: defender
+      rule_id: family-windows-wel-defender-v1
+      sensor_tag: family-windows-wel-defender-v1
+      default_state: deferred-when-third-party-av-primary
+      condition: Microsoft Defender is the primary antivirus provider
+      patterns:
+        - "wel://Microsoft-Windows-Windows Defender/Operational:*"
+  behavior:
+    raw_evtx_collection: prohibited
+    powershell_transcript_collection: prohibited
+    application_log_collection: prohibited
+    powershell_core_collection: out-of-scope
+    response_actions: report-only
+  apply_contract:
+    live_schema_export_required: true
+    live_wel_enablement_read_required: true
+    wel_enablement_change_requires_separate_approval: true
+    complete_before_state_required: true
+    exact_rule_digest_required: true
+    exact_sensor_identity_required: true
+    one_rule_per_group: true
+    resolved_group_manifest_required: true
+    complete_impacted_sid_set_required: true
+    unresolved_condition_action: abort
+    separate_approval_required: true
+    automatic_apply: false
+    ambiguous_result_retry: prohibited
+  resolved_group_manifest_contract:
+    storage: private-ignored-state
+    required_fields:
+      - exact sensor SID
+      - selected group ID
+      - exact rule ID
+      - exact sensor tag
+      - exact patterns
+      - complete impacted SID set
+      - live tag-membership digest
+      - live rule before-state digest
+    rule_contains_only_its_group_patterns: true
+    template_group_conditions_are_directly_applyable: false
+  evidence_contract:
+    correlate_by:
+      - routing/sid
+      - routing/event_type equals WEL
+      - routing/event_time as the post-change timestamp
+      - event/EVENT/System/Channel
+      - event/EVENT/System/EventID
+      - exact post-change UTC window
+    event_body_in_receipt: prohibited
+    successful_write_is_ingestion_proof: false

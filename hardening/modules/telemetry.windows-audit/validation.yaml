@@ -1,0 +1,19 @@
+schema_version: 1
+module: telemetry.windows-audit
+version: 1.0.1
+verification:
+  local:
+    - The verification script returns Passed: true.
+    - Process Creation is Success and ProcessCreationIncludeCmdLine_Enabled equals 1.
+    - Selected logon, account-management, policy-change, privilege-use, and system-integrity audit values match the module.
+    - The pre-change state is present for a targeted rollback.
+  limacharlie:
+    - A fresh process after installation produces Security event 4688 with a populated CommandLine field.
+    - Selected Security events arrive through wel://Security:*.
+  safety:
+    - Treat Security event payloads as sensitive because command lines can include user data or secrets.
+    - No Action1 argument, script output, or validation command contains a secret supplied by the operator.
+    - Confirm Security-log capacity and retention separately before widening this baseline.
+failure_and_ambiguity:
+  - Missing Action1 terminal success, local verification failure, or absent WEL evidence blocks release promotion.
+  - An unknown Action1 result requires read-only reconciliation; never resubmit automatically.

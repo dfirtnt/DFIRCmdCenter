@@ -1,0 +1,29 @@
+schema_version: 1
+module: telemetry.sysmon
+version: 1.0.0
+verification:
+  local:
+    - "The parameterless verification script returns Passed: true."
+    - The restricted module ownership state matches telemetry.sysmon@1.0.0 and status installed.
+    - The Sysmon64 service is present, running, and configured for automatic start.
+    - The SysmonDrv driver is present, running, and configured for boot start.
+    - The installed binary is version 15.22, has the pinned SHA-256, and has a valid Microsoft signature.
+    - Microsoft-Windows-Sysmon/Operational is enabled.
+    - The latest Event ID 16 has the pinned ConfigurationFileHash.
+    - A normal event follows Event ID 16 and the complete later record range contains no Event ID 255.
+  limacharlie:
+    - Collection uses wel://Microsoft-Windows-Sysmon/Operational:*.
+    - A fresh Event ID 16 and a subsequent normal event arrive from the same correlated sensor.
+    - No fresh Event ID 255 appears during the observation window.
+  cross_platform:
+    - The approved Action1 endpoint and correlated LimaCharlie sensor and Velociraptor client remain healthy.
+    - Hostname-only matching is not sufficient identity evidence.
+  safety:
+    - LimaCharlie validation and detections remain report-only.
+    - No broad Sysmon exclusion or automatic tuning is introduced.
+    - Windows 10, Windows Server, existing Sysmon, and non-x64 targets fail closed.
+failure_and_ambiguity:
+  - Missing Action1 terminal success, local verification failure, or absent LimaCharlie WEL evidence blocks release promotion.
+  - A package submission timeout or installing ownership state is unknown and requires read-only reconciliation; never resubmit automatically.
+  - A latest configuration hash mismatch is drift, not permission to reapply the package.
+  - Event ID 255 after the pinned configuration blocks promotion until investigated.

@@ -1,0 +1,41 @@
+schema_version: 1
+module:
+  id: telemetry.powershell
+  version: 1.0.0
+  scope: endpoint
+  release_status: staged-not-tested
+  purpose: >-
+    Enable Windows PowerShell 5.1 module logging, Script Block Logging, and
+    protected local transcription without centrally shipping transcript contents.
+  supported_platforms:
+    - product: Windows 10
+      minimum_release: 22H2
+      architecture: x64
+    - product: Windows 11
+      minimum_release: 22H2
+      architecture: x64
+  prerequisites:
+    - Windows PowerShell 5.1 is present.
+    - The Action1 execution context is elevated.
+    - LimaCharlie is configured to collect Microsoft-Windows-PowerShell/Operational.
+  unsupported_or_out_of_scope:
+    - PowerShell 7 configuration; it has separate policy and event-log handling.
+    - Central transcript shipping or transcript-content inspection.
+    - Security audit policy and Security event 4688; use telemetry.windows-audit.
+  modes:
+    - enforce
+    - verify-only
+  action:
+    type: Action1 multi-file custom package
+    status: source-staged-not-uploaded
+    install_file: scripts/Install-TelemetryPowerShell.ps1
+    rollback_file: scripts/Uninstall-TelemetryPowerShell.ps1
+    verification_file: scripts/Test-TelemetryPowerShell.ps1
+  expected_effects:
+    - Windows PowerShell module logging emits event 4103.
+    - Windows PowerShell Script Block Logging emits event 4104.
+    - Transcripts include invocation headers and use the protected local directory.
+  promotion_gate: >-
+    A supported Windows 11 endpoint must show Action1 success, a clean local verification,
+    and fresh 4103 and 4104 events in LimaCharlie before this version is release-eligible.
+  recovery: See rollback.md. Rollback is a new, exact endpoint action and retains transcripts.

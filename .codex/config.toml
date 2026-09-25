@@ -1,0 +1,10 @@
+# Project-scoped Codex MCP configuration for DFIR Command Center.
+# Credentials are forwarded from the Codex process environment only.
+
+[mcp_servers.action1-readonly]
+command = "uv"
+args = ["run", "--directory", "/Users/starlord/Code/Active/DFIRcmdCenter", "dfirctl-action1-mcp"]
+cwd = "/Users/starlord/Code/Active/DFIRcmdCenter"
+env_vars = ["ACTION1_CLIENT_ID", "ACTION1_CLIENT_SECRET", "ACTION1_REGION", "ACTION1_ORGANIZATION_ID"]
+startup_timeout_sec = 30
+tool_timeout_sec = 120

@@ -1,0 +1,27 @@
+schema_version: 1
+module: validation.endpoint-health
+version: 1.0.0
+verification:
+  local:
+    - The collector emits one schema-version 1 JSON object in read-only-local mode.
+    - The verifier accepts only the documented allowlisted fields and normalized enums.
+    - The internal JSON seam accepts no Action1 parameter, file, network, or other external input.
+    - Windows 11 client edition, release, exact build and revision, and x64 architecture are collected.
+    - Secure Boot, TPM, antivirus, Windows Firewall profiles, Memory Integrity, and local management-agent service states are reported without changing them.
+    - The verifier returns Passed true only when required local probes are complete; posture concerns remain explicit findings.
+  cross_platform:
+    - Fresh Action1 evidence identifies the exact managed endpoint and confirms current agent health.
+    - Fresh LimaCharlie evidence identifies the exact sensor and confirms it is receiving; local rphcpsvc state alone is insufficient.
+    - Fresh Velociraptor evidence identifies the exact client and confirms a current check-in; local service state alone is insufficient.
+    - Action1, LimaCharlie, and Velociraptor observations match through multiple strong attributes retained only in private evidence; hostname-only correlation cannot pass.
+  safety:
+    - No endpoint setting, service, registry value, firewall rule, antivirus policy, TPM state, or file is changed.
+    - Output excludes raw device and user identifiers, platform IDs, provider strings, paths, command lines, credentials, TPM owner data, and recovery material.
+    - Provider-controlled names are normalized to microsoft_defender, mcafee, other, or unknown and are never echoed.
+    - Raw platform snapshots and target mappings remain under ignored restricted private state, never in public fixtures or module files.
+failure_and_ambiguity:
+  - Missing, stale, malformed, future-dated, inaccessible, contradictory, or unexpected local evidence blocks local verification.
+  - Local service state does not prove cloud check-in, sensor identity, or cross-platform identity correlation.
+  - Antivirus provider presence and health do not establish subscription, renewal, license, or trial status.
+  - An active McAfee or other third-party antivirus provider defers Defender, ASR, and Controlled Folder Access; it does not authorize removal or replacement.
+  - Windows release support must be checked against current Microsoft lifecycle data before a later hardening proposal.

@@ -1,0 +1,17 @@
+schema_version: 1
+module: telemetry.limacharlie-wel
+version: 1.0.0
+reviewed_on: 2026-09-19
+artifacts:
+  - name: local-source-preflight
+    path: hardening/modules/telemetry.limacharlie-wel/scripts/Test-LimaCharlieWelSource.ps1
+    sha256: dd6beef35668d3bbdae1505326ea58e919d24edea6ad7795c364f7c9d4783dfc
+    origin: locally-authored, offline-staged Action1 Script Library source
+  - name: collection-desired-state
+    path: platforms/limacharlie/artifact-rules/family-windows-wel-v1.yaml
+    sha256: 386b5ba047ff47a737fd19abc2111c190765b7b1b8d017df1e686f30efa59974
+    origin: locally-authored, non-pushable LimaCharlie desired-state template
+  - name: report-only-detection-expectations
+    path: platforms/limacharlie/detection-expectations/family-windows-wel-report-only-v1.yaml
+    sha256: 4c1149b4e165f7a59915e89ebb8cea3c464ede0eb9199c68b755943de31da542
+    origin: locally-authored, non-executable validation expectations

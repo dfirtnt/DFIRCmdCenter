@@ -19,10 +19,21 @@ class Action1ResponseError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class Action1Page:
+    """One page of an Action1 list response.
+
+    Action1 never returns an integer ``next_page``: real responses carry
+    either a relative continuation URL (e.g.
+    ``/API/endpoints/managed?from=60&limit=10``) or no ``next_page`` field at
+    all, with ``total_items``/``limit`` left for the caller to page through
+    via ``from`` offsets. ``next_page`` is kept here only as
+    informational/diagnostic text, never as pagination control flow -- see
+    :func:`collect_all`.
+    """
+
     items: tuple[Mapping[str, Any], ...]
-    total_items: int
+    total_items: int | None
     limit: int
-    next_page: int | None
+    next_page: str | None = None
 
 
 def safe_identifier(value: str, field: str) -> str:
@@ -49,10 +60,10 @@ def parse_page(body: bytes) -> Action1Page:
     if (
         not isinstance(items, list)
         or any(not isinstance(item, dict) for item in items)
-        or not isinstance(total, int)
+        or (total is not None and not isinstance(total, int))
         or not isinstance(limit, int)
         or limit <= 0
-        or (next_page is not None and not isinstance(next_page, int))
+        or (next_page is not None and not isinstance(next_page, str))
     ):
         raise Action1ResponseError("Action1 pagination fields are malformed")
     sanitized = redact(items)
@@ -65,24 +76,37 @@ def collect_all(
     *,
     max_pages: int = 100,
 ) -> tuple[Mapping[str, Any], ...]:
-    page_number = 0
-    seen_pages: set[int] = set()
+    """Walk bounded ``from`` offsets, ignoring ``next_page`` for control flow.
+
+    ``fetch`` is called with the offset ("from") of the next page to
+    request, mirroring how :class:`Action1LiveClient._paginate` walks the
+    real API. A page is the last one when it is empty, shorter than its own
+    declared ``limit``, or the running offset reaches a declared
+    ``total_items``.
+    """
+
     items: list[Mapping[str, Any]] = []
     declared_total: int | None = None
-    while True:
-        if page_number in seen_pages or len(seen_pages) >= max_pages:
-            raise Action1ResponseError("Action1 pagination loop or page limit detected")
-        seen_pages.add(page_number)
-        page = fetch(page_number)
-        if declared_total is None:
-            declared_total = page.total_items
-        elif page.total_items != declared_total:
-            raise Action1ResponseError("Action1 total changed during pagination")
+    offset = 0
+    for _ in range(max_pages):
+        page = fetch(offset)
+        if page.total_items is not None:
+            if declared_total is None:
+                declared_total = page.total_items
+            elif page.total_items != declared_total:
+                raise Action1ResponseError("Action1 total changed during pagination")
         items.extend(page.items)
-        if page.next_page is None:
+        offset += len(page.items)
+        exhausted = (
+            len(page.items) == 0
+            or len(page.items) < page.limit
+            or (declared_total is not None and offset >= declared_total)
+        )
+        if exhausted:
             break
-        page_number = page.next_page
-    if len(items) != declared_total:
+    else:
+        raise Action1ResponseError("Action1 pagination loop or page limit detected")
+    if declared_total is not None and len(items) != declared_total:
         raise Action1ResponseError("Action1 pagination is incomplete")
     return tuple(items)
 

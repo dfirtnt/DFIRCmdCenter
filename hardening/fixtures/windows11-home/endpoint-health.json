@@ -1,0 +1,106 @@
+{
+  "SchemaVersion": 1,
+  "Module": "validation.endpoint-health@1.0.0",
+  "CapturedAtUtc": "2026-09-19T18:00:00.0000000Z",
+  "CollectionMode": "read-only-local",
+  "OperatingSystem": {
+    "Status": "collected",
+    "Family": "windows_11",
+    "Edition": "home",
+    "Release": "25h2",
+    "Build": 26200,
+    "Revision": 9457,
+    "Architecture": "x64",
+    "ProductType": "client"
+  },
+  "SecureBoot": {
+    "Status": "collected",
+    "Supported": true,
+    "Enabled": true
+  },
+  "Tpm": {
+    "Status": "collected",
+    "Present": true,
+    "Ready": true,
+    "Enabled": true,
+    "Activated": true,
+    "SpecVersion": "2.0"
+  },
+  "Antivirus": {
+    "Status": "collected",
+    "Products": [
+      {
+        "ProviderFamily": "mcafee",
+        "State": "on",
+        "Signatures": "up-to-date"
+      },
+      {
+        "ProviderFamily": "microsoft_defender",
+        "State": "off",
+        "Signatures": "up-to-date"
+      }
+    ],
+    "ActiveProviderFamilies": [
+      "mcafee"
+    ],
+    "Assessment": "single-active",
+    "DefenderDependentControls": "defer"
+  },
+  "Firewall": {
+    "Status": "collected",
+    "Products": [
+      {
+        "ProviderFamily": "mcafee",
+        "State": "on",
+        "Signatures": "not-applicable"
+      }
+    ],
+    "Profiles": [
+      {
+        "Name": "domain",
+        "Enabled": true,
+        "DefaultInboundAction": "block",
+        "DefaultOutboundAction": "allow",
+        "LogBlocked": true
+      },
+      {
+        "Name": "private",
+        "Enabled": true,
+        "DefaultInboundAction": "block",
+        "DefaultOutboundAction": "allow",
+        "LogBlocked": true
+      },
+      {
+        "Name": "public",
+        "Enabled": true,
+        "DefaultInboundAction": "block",
+        "DefaultOutboundAction": "allow",
+        "LogBlocked": true
+      }
+    ],
+    "ActiveNetworkCategories": [
+      "private"
+    ],
+    "Assessment": "all-windows-profiles-enabled"
+  },
+  "PlatformProtections": {
+    "MemoryIntegrity": {
+      "Status": "collected",
+      "Configured": true,
+      "Running": true
+    }
+  },
+  "Agents": {
+    "Action1": "running",
+    "LimaCharlie": "running",
+    "Velociraptor": "running",
+    "IdentityCorrelation": "external-validation-required"
+  },
+  "CollectionErrors": [],
+  "Limitations": [
+    "antivirus-subscription-and-trial-state-not-assessed",
+    "local-service-state-is-not-cloud-agent-health",
+    "platform-identity-correlation-requires-external-strong-id-evidence",
+    "windows-release-support-requires-current-review"
+  ]
+}

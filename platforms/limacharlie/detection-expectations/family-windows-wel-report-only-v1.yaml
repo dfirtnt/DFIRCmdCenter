@@ -1,0 +1,53 @@
+schema_version: 1
+id: family-windows-wel-report-only-v1
+version: 1.0.0
+status: expectations-only-not-dr-rules
+purpose: >-
+  Record observable report-only outcomes for WEL validation without defining
+  executable LimaCharlie detection and response rules.
+response_boundary: [report]
+automatic_apply: false
+expectations:
+  - id: security-process-created
+    source_group: core
+    channel: Security
+    event_ids: [4688]
+    expected_response: report
+  - id: system-benign-validation-event
+    source_group: core
+    channel: System
+    event_ids: [100]
+    expected_response: report
+  - id: windows-powershell-telemetry
+    source_group: core
+    channel: Microsoft-Windows-PowerShell/Operational
+    event_ids: [4103, 4104]
+    expected_response: report
+  - id: sysmon-configuration-and-process
+    source_group: sysmon
+    channel: Microsoft-Windows-Sysmon/Operational
+    event_ids: [1, 16]
+    expected_response: report
+  - id: scheduled-item-lifecycle
+    source_group: core
+    channel: Microsoft-Windows-TaskScheduler/Operational
+    event_ids: [106, 141, 142]
+    expected_response: report
+  - id: wmi-provider-activity
+    source_group: core
+    channel: Microsoft-Windows-WMI-Activity/Operational
+    event_ids: passive-only
+    examples: [5857, 5858]
+    expected_response: report
+  - id: application-control-audit
+    source_group: appcontrol
+    channels:
+      - Microsoft-Windows-CodeIntegrity/Operational
+      - Microsoft-Windows-AppLocker/MSI and Script
+    event_ids: passive-only
+    expected_response: report
+  - id: defender-operational
+    source_group: defender
+    channel: Microsoft-Windows-Windows Defender/Operational
+    event_ids: passive-only
+    expected_response: report

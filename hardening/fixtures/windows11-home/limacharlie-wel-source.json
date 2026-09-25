@@ -1,0 +1,75 @@
+{
+  "SchemaVersion": 1,
+  "Module": "telemetry.limacharlie-wel@1.0.0",
+  "CollectionMode": "read-only-local-preflight",
+  "Platform": {
+    "Status": "collected",
+    "Family": "windows_11",
+    "Build": 26200,
+    "Architecture": "x64",
+    "ProductType": "client",
+    "Supported": true
+  },
+  "Passed": true,
+  "Channels": [
+    {
+      "Channel": "Security",
+      "Group": "core",
+      "Status": "available-enabled",
+      "Enabled": true
+    },
+    {
+      "Channel": "System",
+      "Group": "core",
+      "Status": "available-enabled",
+      "Enabled": true
+    },
+    {
+      "Channel": "Microsoft-Windows-PowerShell/Operational",
+      "Group": "core",
+      "Status": "available-enabled",
+      "Enabled": true
+    },
+    {
+      "Channel": "Microsoft-Windows-TaskScheduler/Operational",
+      "Group": "core",
+      "Status": "available-enabled",
+      "Enabled": true
+    },
+    {
+      "Channel": "Microsoft-Windows-WMI-Activity/Operational",
+      "Group": "core",
+      "Status": "available-enabled",
+      "Enabled": true
+    },
+    {
+      "Channel": "Microsoft-Windows-Sysmon/Operational",
+      "Group": "sysmon",
+      "Status": "unavailable",
+      "Enabled": null
+    },
+    {
+      "Channel": "Microsoft-Windows-CodeIntegrity/Operational",
+      "Group": "appcontrol",
+      "Status": "available-enabled",
+      "Enabled": true
+    },
+    {
+      "Channel": "Microsoft-Windows-AppLocker/MSI and Script",
+      "Group": "appcontrol",
+      "Status": "available-enabled",
+      "Enabled": true
+    },
+    {
+      "Channel": "Microsoft-Windows-Windows Defender/Operational",
+      "Group": "defender",
+      "Status": "available-enabled",
+      "Enabled": true
+    }
+  ],
+  "Limitations": [
+    "synthetic-example-only",
+    "channel-availability-does-not-prove-limacharlie-ingestion",
+    "event-content-and-event-counts-not-read"
+  ]
+}

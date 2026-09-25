@@ -10,11 +10,13 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.28.1,<0.29",
+    "mcp>=2.2.0,<3",
     "PyYAML>=6.0.2,<7",
 ]
 
 [project.scripts]
 dfirctl = "dfircmdcenter.cli:main"
+dfirctl-action1-mcp = "dfircmdcenter.mcp.action1_server:main"
 
 [dependency-groups]
 dev = [

@@ -1,0 +1,19 @@
+schema_version: 1
+module: telemetry.powershell
+version: 1.0.0
+verification:
+  local:
+    - The verification script returns Passed: true.
+    - Microsoft-Windows-PowerShell/Operational is enabled.
+    - ScriptBlockLogging, ModuleLogging, and Transcription policy values match the module.
+    - The transcript directory allows only SYSTEM and BUILTIN\\Administrators.
+  limacharlie:
+    - A fresh Windows PowerShell session produces event 4103.
+    - A fresh Windows PowerShell session produces event 4104.
+    - Events arrive through wel://Microsoft-Windows-PowerShell/Operational:*.
+  safety:
+    - No Action1 argument, script output, or transcript contains a secret supplied by the operator.
+    - No PowerShell 7 policy is changed by this module.
+failure_and_ambiguity:
+  - Missing Action1 terminal success, local verification failure, or absent WEL evidence blocks release promotion.
+  - An unknown Action1 result requires read-only reconciliation; never resubmit automatically.

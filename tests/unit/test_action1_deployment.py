@@ -49,34 +49,57 @@ def identity(*, strong: bool = True) -> EndpointIdentity:
 
 
 def test_action1_pagination_is_complete_and_secret_fields_are_redacted() -> None:
+    # fetch is keyed by offset ("from"), matching every real Action1 list
+    # response, not by an integer next_page (Action1 never returns one).
     pages = {
-        0: Action1Page(({"id": "one", "api_key": "secret"},), 2, 1, 1),
+        0: Action1Page(
+            ({"id": "one", "api_key": "secret"},), 2, 1, "/API/endpoints/managed?from=1&limit=1"
+        ),
         1: Action1Page(({"id": "two"},), 2, 1, None),
     }
     collected = collect_all(pages.__getitem__)
     assert [item["id"] for item in collected] == ["one", "two"]
 
+    # ResultPage envelope shape: next_page is a relative continuation URL.
     parsed = parse_page(
         json.dumps(
             {
                 "items": [{"id": "one", "access_token": "secret"}],
                 "total_items": 1,
                 "limit": 50,
-                "next_page": None,
+                "next_page": "/API/endpoints/managed?from=50&limit=50",
             }
         ).encode()
     )
     assert parsed.items[0]["access_token"] == "[REDACTED]"
+    assert parsed.next_page == "/API/endpoints/managed?from=50&limit=50"
+
+    # Offset envelope shape: no next_page field at all.
+    parsed_offset_envelope = parse_page(
+        json.dumps(
+            {
+                "items": [{"id": "two"}],
+                "total_items": 1,
+                "limit": 50,
+                "from": 0,
+            }
+        ).encode()
+    )
+    assert parsed_offset_envelope.next_page is None
+    assert parsed_offset_envelope.items[0]["id"] == "two"
 
 
 def test_action1_pagination_detects_truncation_loop_and_changed_total() -> None:
     with pytest.raises(Action1ResponseError, match="incomplete"):
-        collect_all(lambda _: Action1Page(({"id": "one"},), 2, 50, None))
-    with pytest.raises(Action1ResponseError, match="loop"):
-        collect_all(lambda _: Action1Page((), 1, 1, 0))
+        collect_all(lambda _offset: Action1Page(({"id": "one"},), 2, 50, None))
+    with pytest.raises(Action1ResponseError, match="page limit"):
+        collect_all(
+            lambda offset: Action1Page(({"id": f"item-{offset}"},), None, 1, None),
+            max_pages=3,
+        )
 
     pages = {
-        0: Action1Page(({"id": "one"},), 2, 1, 1),
+        0: Action1Page(({"id": "one"},), 2, 1, "/API/endpoints/managed?from=1&limit=1"),
         1: Action1Page(({"id": "two"},), 3, 1, None),
     }
     with pytest.raises(Action1ResponseError, match="total changed"):

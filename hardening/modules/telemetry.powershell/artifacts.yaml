@@ -1,0 +1,17 @@
+schema_version: 1
+module: telemetry.powershell
+version: 1.0.0
+reviewed_on: 2026-09-17
+artifacts:
+  - name: install
+    path: scripts/Install-TelemetryPowerShell.ps1
+    sha256: 42a7ba1bda0de068df689dd3436961eddc544ffa3a908247ba5b62a497db1efd
+    origin: locally-authored, offline-staged Action1 package source
+  - name: verify
+    path: scripts/Test-TelemetryPowerShell.ps1
+    sha256: a96bccf4163cf1e3034c57fc07917e90edb4271def9b49e47618f60930262348
+    origin: locally-authored, offline-staged Action1 package source
+  - name: rollback
+    path: scripts/Uninstall-TelemetryPowerShell.ps1
+    sha256: 9fcfa1164a4d80869448379830d2194cd5724b0f7ce05ceaad461defa60dd68f
+    origin: locally-authored, offline-staged Action1 package source

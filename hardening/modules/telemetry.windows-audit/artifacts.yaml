@@ -1,0 +1,17 @@
+schema_version: 1
+module: telemetry.windows-audit
+version: 1.0.1
+reviewed_on: 2026-09-25
+artifacts:
+  - name: install
+    path: scripts/Install-TelemetryWindowsAudit.ps1
+    sha256: bc88eafa42ac622fb80b942af5dd3ad8cd3503eb08daa09035b9e7faf2531cd6
+    origin: locally-authored, offline-staged Action1 package source
+  - name: verify
+    path: scripts/Test-TelemetryWindowsAudit.ps1
+    sha256: de638dbb294d759f8121dbae69c84c0760709f1e347bb58c1241385083b70326
+    origin: locally-authored, offline-staged Action1 package source
+  - name: rollback
+    path: scripts/Uninstall-TelemetryWindowsAudit.ps1
+    sha256: 93f3045baa42bf2a0eb1b39496ff150d149d2d9f2e8ea191dd15a43290767539
+    origin: locally-authored, offline-staged Action1 package source

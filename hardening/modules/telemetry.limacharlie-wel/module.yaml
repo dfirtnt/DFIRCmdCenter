@@ -1,0 +1,60 @@
+schema_version: 1
+module:
+  id: telemetry.limacharlie-wel
+  version: 1.0.0
+  scope: endpoint
+  release_status: staged-not-tested
+  purpose: >-
+    Preflight the Windows Event Log sources used by the family Windows 11
+    baseline and define an exact, privacy-bounded desired state for LimaCharlie
+    WEL collection without treating local channel availability as proof of
+    centralized ingestion.
+  supported_platforms:
+    - product: Windows 11
+      minimum_release: 22H2
+      architecture: x64
+  prerequisites:
+    - The LimaCharlie Windows sensor is healthy and correlated to the exact endpoint by strong identifiers.
+    - The LimaCharlie Reliable Tasking and Artifact extensions are enabled.
+    - LimaCharlie Exfil/Event Collection has WEL events enabled for the applicable Windows rule.
+    - Exact group tags are selected from validated conditions and resolved to a private exact-SID manifest.
+    - Required local Windows Event Log channels are enabled by their owning modules or Windows defaults.
+  unsupported_or_out_of_scope:
+    - Applying a guessed LimaCharlie Artifact Collection API payload.
+    - Broad collection from every Windows sensor in the organization.
+    - Raw EVTX collection, Windows Application log collection, or PowerShell transcript shipping.
+    - Changing local audit, PowerShell, Sysmon, App Control, or Defender policy.
+    - Automated isolation, blocking, process termination, tasking, tagging, or other response actions.
+    - Windows 10, Windows Server, and honeypot or malware-research systems.
+  modes:
+    - enforce
+    - verify-only
+  action:
+    local_preflight:
+      type: Action1 Script Library PowerShell
+      status: source-staged-not-uploaded
+      script_file: scripts/Test-LimaCharlieWelSource.ps1
+      changes_endpoint_state: false
+    collection_template:
+      type: LimaCharlie Artifact Collection desired-state template
+      status: prepared-not-live-schema-validated
+      template_file: ../../../platforms/limacharlie/artifact-rules/family-windows-wel-v1.yaml
+      changes_shared_platform_state: true
+    detection_expectations:
+      type: non-executable report-only expectations
+      status: source-staged-not-uploaded
+      template_file: ../../../platforms/limacharlie/detection-expectations/family-windows-wel-report-only-v1.yaml
+  expected_effects:
+    - The local preflight reports only bounded channel availability and enabled state.
+    - Separately approved per-group rules stream only resolved patterns from an exact re-read set of matched sensor IDs.
+    - Fresh events can be correlated by sensor ID, channel, event ID, and a post-change UTC observation window.
+  promotion_gate: >-
+    Export and pin the live LimaCharlie artifact-rule schema and before-state;
+    read back Event Collection/Exfil WEL enablement; resolve each selected group,
+    tag, pattern set, and complete impacted sensor-ID set; re-read them immediately
+    before an approved write; apply once; and prove fresh expected events from one
+    correlated Windows 11 test sensor while all behavior remains report-only.
+  recovery: >-
+    See rollback.md. Endpoint rollback restores only the exact sensor's group-tag
+    assignments. Shared-rule changes use a separate shared-platform lifecycle and
+    the complete resolved impacted-sensor set.

@@ -1,0 +1,42 @@
+schema_version: 1
+module:
+  id: telemetry.windows-audit
+  version: 1.0.1
+  scope: endpoint
+  release_status: staged-not-tested
+  purpose: >-
+    Enable a bounded Windows Security advanced-audit baseline, including process
+    creation with command lines for Security event 4688.
+  supported_platforms:
+    - product: Windows 10
+      minimum_release: 22H2
+      architecture: x64
+    - product: Windows 11
+      minimum_release: 22H2
+      architecture: x64
+  prerequisites:
+    - The Action1 execution context is elevated and can run auditpol.exe.
+    - LimaCharlie is configured to collect Security events.
+    - No higher-precedence management policy is expected to overwrite the selected advanced audit subcategories.
+  unsupported_or_out_of_scope:
+    - Security event-log size, retention, archive, and clear behavior.
+    - Object-access, file-system, registry, WMI, task-scheduler, or PowerShell logging.
+    - Domain-controller-specific Kerberos and directory-service auditing.
+    - Any centralized Security-log shipping configuration.
+  modes:
+    - enforce
+    - verify-only
+  action:
+    type: Action1 multi-file custom package
+    status: source-staged-not-uploaded
+    install_file: scripts/Install-TelemetryWindowsAudit.ps1
+    rollback_file: scripts/Uninstall-TelemetryWindowsAudit.ps1
+    verification_file: scripts/Test-TelemetryWindowsAudit.ps1
+  expected_effects:
+    - Security event 4688 records successful process creation with command-line data.
+    - Security events record selected logon, account-management, policy-change, privilege-use, and system-integrity activity.
+  promotion_gate: >-
+    A supported Windows 11 endpoint must show Action1 success, a clean local verification,
+    and fresh Security event 4688 evidence with command-line data in LimaCharlie before this
+    version is release-eligible.
+  recovery: See rollback.md. Rollback restores only the audit and registry values captured before first apply.

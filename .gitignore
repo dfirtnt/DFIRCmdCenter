@@ -4,6 +4,7 @@
 # Credentials and machine-local configuration must never enter the repository.
 .env
 .env.*
+!.env.example
 *.local.yaml
 *.local.yml
 config.local.*

@@ -46,5 +46,4 @@ These rules govern all work in this repository.
 - LimaCharlie responses are report-only by default.
 - Never edit, move, rename, or reorganize Velociraptor's raw datastore. Prefer supported
   flow and hunt exports and require exact client, flow, hunt, and artifact scope.
-- Do not expose the local Splunk Free server remotely.
 

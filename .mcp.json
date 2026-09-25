@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "action1-readonly": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/starlord/Code/Active/DFIRcmdCenter",
+        "dfirctl-action1-mcp"
+      ],
+      "env": {
+        "ACTION1_CLIENT_ID": "${ACTION1_CLIENT_ID}",
+        "ACTION1_CLIENT_SECRET": "${ACTION1_CLIENT_SECRET}",
+        "ACTION1_REGION": "${ACTION1_REGION}",
+        "ACTION1_ORGANIZATION_ID": "${ACTION1_ORGANIZATION_ID}"
+      }
+    }
+  }
+}
